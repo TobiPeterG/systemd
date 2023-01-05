@@ -14,6 +14,7 @@ loaderentry_install = custom_target(
 
 kernel_install_files = files(
         '50-depmod.install',
+        '99-kernel.install',
         '90-uki-copy.install',
 )
 
