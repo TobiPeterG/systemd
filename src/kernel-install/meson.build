@@ -13,7 +13,10 @@ loaderentry_install = custom_target(
         install_dir : kernelinstalldir)
 
 kernel_install_files = files(
+        '40-snapper-rename-kernel.install',
         '50-depmod.install',
+        '51-snapper-rename-initrd.install',
+        '91-snapper-snapshot.install',
         '99-kernel.install',
         '90-uki-copy.install',
 )
