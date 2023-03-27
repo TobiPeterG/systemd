@@ -1951,6 +1951,53 @@ pymod = import('python')
 python = pymod.find_installation('python3', required : true, modules : ['jinja2'])
 python_39 = python.language_version().version_compare('>=3.9')
 
+#####################################################################
+
+efi_arch = {
+        'aarch64'     : 'aa64',
+        'arm'         : 'arm',
+        'loongarch32' : 'loongarch32',
+        'loongarch64' : 'loongarch64',
+        'riscv32'     : 'riscv32',
+        'riscv64'     : 'riscv64',
+        'x86_64'      : 'x64',
+        'x86'         : 'ia32',
+}.get(host_machine.cpu_family(), '')
+
+if get_option('bootloader') != 'false' and efi_arch != ''
+        conf.set_quoted('EFI_MACHINE_TYPE_NAME', efi_arch)
+elif get_option('bootloader') == 'true' and efi_arch == ''
+        error('EFI not supported for this arch.')
+endif
+
+efi_arch_alt = ''
+if efi_arch == 'x64' and cc.links('''
+                #include <limits.h>
+                int main(int argc, char *argv[]) {
+                        return __builtin_popcount(argc - CHAR_MAX);
+                }''', args : ['-m32', '-march=i686'], name : '32bit build possible')
+        efi_arch_alt = 'ia32'
+endif
+
+have_pyelftools = pymod.find_installation('python3', required : false, modules : ['elftools']).found()
+if get_option('bootloader') == 'true' and (not python_39 or not have_pyelftools)
+        error('EFI bootloader support requires Python >= 3.9 and pyelftools.')
+endif
+
+conf.set10(
+        'ENABLE_BOOTLOADER',
+        get_option('efi') and
+        get_option('bootloader') in ['auto', 'true'] and
+        efi_arch != '' and
+        python_39 and
+        have_pyelftools,
+)
+
+if conf.get('ENABLE_BOOTLOADER') == 1
+        conf.set_quoted('BOOTLOADER_VENDOR', get_option('bootloader-vendor'))
+        conf.set_quoted('BOOTLOADER_DESCRIPTION', get_option('bootloader-description'))
+endif
+
 if get_option('ukify') == 'auto'
     want_ukify = python_39  and conf.get('HAVE_GNU_EFI') == 1
 elif get_option('ukify') == 'true' and (not python_39 or conf.get('HAVE_GNU_EFI') != 1)
