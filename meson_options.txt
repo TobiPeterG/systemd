@@ -447,6 +447,8 @@ option('efi-libdir', type : 'string',
        description : 'path to the EFI lib directory')
 option('efi-includedir', type : 'string', value : '/usr/include/efi',
        description : 'path to the EFI header directory')
+option('bootloader', type : 'combo', choices : ['auto', 'true', 'false'],
+       description : 'sd-boot/stub and userspace tools')
 option('bootloader-vendor', type : 'string', value : 'systemd',
        description : 'boot loader vendor subdirectory')
 option('bootloader-description', type : 'string', value : 'Linux Boot Manager',
